@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 
 const authRouter = require('./routers/authRouter')
 const postsRouter = require('./routers/postsRouter')
+const usersRouter = require('./routers/usersRouter') // Importando o usersRouter
 
 const app = express();
 const port = process.env.PORT;
@@ -25,6 +26,7 @@ mongoose.connect(mongoURI)
 
 app.use('/api/auth', authRouter);
 app.use('/api/posts', postsRouter);
+app.use ('/api/users', usersRouter); // Adicione esta linha para usar o usersRouter
 
 app.get('/', (req, res) => {
     res.json({ message: 'Hello from the server' })

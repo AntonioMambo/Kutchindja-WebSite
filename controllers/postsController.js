@@ -1,6 +1,8 @@
 const { createPostSchema } = require('../middlewares/validator');
 const Post = require('../models/postsModel');
 
+
+//Funcap que permite listar todos os posts
 exports.getPosts = async (req, res) => {
     const { page } = req.body;
     const postsPerPage = 10;

@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-
 const { signupSchema } = require('../middlewares/validator');
 const { signinSchema } = require('../middlewares/validator');
 const { acceptCodeSchema } = require('../middlewares/validator');
@@ -9,37 +8,55 @@ const User = require('../models/usersModel');
 const { doHash, doHashValidation, hmacProcess } = require('../utils/hashing');
 const transport = require('../middlewares/sendMail');
 
+
+//Funcao que vai permitir o usario criar conta
 exports.signup = async (req, res) => {
 
-    const { email, password } = req.body;
+    //Pega no corpo da requisicao o email e a password 
+    const { userName,email, password } = req.body;
+    
 
+    //Faz a validacao do email e password
     try{
 
-        const { error, value } = signupSchema.validate({ email, password });
+        // Faz a validacao do email e password com base no schema de validacao
+        const { error, value } = signupSchema.validate({userName,email, password });
 
+        //Se houver erro, retorna o erro
         if(error) {
             return res.status(401).json({ seccess: false, message: error.details[0].message });
         }
 
+       
+        //Procura um usuarios com base no email fornecido
         const existingUser = await User.findOne({ email });
 
+        //Verifica se o usuario existe
         if(existingUser) {
             return res.status(401).json({ success: false, message: 'User already exists!'});
         }
 
+        
+        //Faz o hash da password
         const hashedPassword = await doHash(password, 12);
 
+        
+        //Cria um novo usuario com o email e password fornecidos
         const newUser = new User({
+            userName,
             email,
             password: hashedPassword
         });
 
+        //Verifica se o usuario foi criado com sucesso
         const result = await newUser.save();
 
+        //Se o usuario foi criado com sucesso, gera um token
         result.password = undefined;
 
+        //Resposta: Truw
         res.status(201).json({
-            success: true, message: 'Your account has been created successfully!',
+            success: true, message: 'A sua conta foi criada com sucesso!',
             result
         });
 
@@ -48,46 +65,57 @@ exports.signup = async (req, res) => {
     }
 };
 
+//Funcao que permite o usuario fazer Login
 exports.signin = async (req, res) => {
 
+    //Pega no corpo da requisicao e extrai o email e password
     const { email, password } = req.body;
 
+    //Faz a validacao do email e password
     try {
 
+        // Faz a validacao do email e password com base no schema de validacao
         const { error, value } = signinSchema.validate({ email, password });
 
+        //Se houver erro, retorna o erro
         if (error) {
             return res
                 .status(401)
                 .json({ seccess: false, message: error.details[0].message });
         }
 
+        //Procura um usuarios com base no email fornecido
         const existingUser = await User.findOne({ email }).select('+password')
 
+        //Verifica se o usuario existe, caso nao exita informa
         if(!existingUser) {
             return res
                 .status(401)
-                .json({ success: false, message: 'User does not exists!'});
+                .json({ success: false, message: 'O usuario nao existe. Crie uma conta primeiro!'});
         }
 
+        //Faz a comparacao das palavras sem hash e com hash
         const result = await doHashValidation(password, existingUser.password)
 
+        //Caso nao seja iguais, informa
         if(!result) {
             return res
                 .status(401)
-                .json({ success: false, message: 'Invalid credentials!' })
+                .json({ success: false, message: 'Dados do usuario invalidos!' })
         }
 
+        //Gera o token de acesso
         const token = jwt.sign({
             userId: existingUser._id,
             email: existingUser.email,
             verified: existingUser.verified
         }, 
         process.env.TOKEN_SECRET, {
-            expiresIn: '8h'
+            expiresIn: '8h' //8 horas para o token de acesso
         }
     );
 
+    //Configuracao do cookie de acesso
     res.cookie('Authorization', 'Bearer ' + token, { expires: new Date(Date.now() + 8 * 3600000), httpOny: process.env.NODE_ENV === 'production', secure: process.env.NODE_ENV === 'production'})
     .json({
         success: true,
@@ -100,6 +128,7 @@ exports.signin = async (req, res) => {
     }
 };
 
+//Funcao que permite o usuario fazer logout
 exports.signout = async (req, res) => {
     res
         .clearCookie('Authorization')
@@ -107,6 +136,7 @@ exports.signout = async (req, res) => {
         .json({ success: true, message: 'logged out successfully' });
 };
 
+//Funcao que permite o usuario verificar o email, enviado um codigo de verificacao para o email
 exports.sendVerificationCode = async (req, res) => {
 
     const { email } = req.body;
@@ -151,6 +181,7 @@ exports.sendVerificationCode = async (req, res) => {
     }
 };
 
+//Funcao que permite o usuario verificar o codigo de verificacao enviado para o email
 exports.verifyVerificationCode = async (req, res) => {
 
     const { email, providedCode } = req.body;
@@ -210,6 +241,7 @@ exports.verifyVerificationCode = async (req, res) => {
     }
 };
 
+//Funcao que permite o usuario mudar a password
 exports.changePassword = async (req, res) => {
 
     const { userId, verified } = req.user;
@@ -260,6 +292,7 @@ exports.changePassword = async (req, res) => {
     }
 };
 
+//Funcao que permite o usuario fazer logout
 exports.sendForgotPasswordCode = async (req, res) => {
 
     const { email } = req.body;
@@ -298,6 +331,7 @@ exports.sendForgotPasswordCode = async (req, res) => {
     }
 };
 
+//Funcao que permite o usuario verificar o codigo de verificacao enviado para o email
 exports.verifyForgotPasswordCode = async (req, res) => {
 
     const { email, providedCode, newPassword } = req.body;

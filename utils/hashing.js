@@ -12,6 +12,6 @@ exports.doHashValidation = (value, hashedValue) => {
 };
 
 exports.hmacProcess = (value, key) => {
-    const result = createHmac('sha256', key).update(value).digest('hex');
+    const result = createHmac('sha256', process.env.HMAC_VERIFICATION_MODE_SECRET).update(value).digest('hex');
     return result;
 };

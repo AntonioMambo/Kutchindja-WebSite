@@ -1,16 +1,26 @@
 const Joi = require('joi');
 
 exports.signupSchema = Joi.object({
+    userName: Joi.string()
+        .min(5)
+        .trim()
+        .required()
+        .messages({
+            'string.base': 'Username must be a string!',
+            'string.empty': 'Username is required!',
+            'string.min': 'Username must have 5 characters!',
+            'any.required': 'Username is required!',
+        }),
     email: Joi.string()
         .min(6)
         .max(60)
         .required()
         .email({
             tlds: { allow: ['com', 'net'] }
-    }),
-    password: Joi.string()
-        .required()
-        .pattern(new RegExp('^(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9])(?=.*[a-z]).{8,}$'))
+        }),
+        password: Joi.string()
+            .required()
+            .pattern(new RegExp('^(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9])(?=.*[a-z]).{8,}$'))
 });
 
 exports.signinSchema = Joi.object({
@@ -20,7 +30,7 @@ exports.signinSchema = Joi.object({
         .required()
         .email({
             tlds: { allow: ['com', 'net'] }
-    }),
+        }),
     password: Joi.string()
         .required()
         .pattern(new RegExp('^(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9])(?=.*[a-z]).{8,}$'))
@@ -33,7 +43,7 @@ exports.acceptCodeSchema = Joi.object({
         .required()
         .email({
             tlds: { allow: ['com', 'net'] }
-    }),
+        }),
     providedCode: Joi.number().required()
 });
 
@@ -53,7 +63,7 @@ exports.acceptFPCodeSchema = Joi.object({
         .required()
         .email({
             tlds: { allow: ['com', 'net'] }
-    }),
+        }),
     providedCode: Joi.number().required(),
     newPassword: Joi.string()
         .required()
