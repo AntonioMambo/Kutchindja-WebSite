@@ -34,6 +34,28 @@ const postSchema = mongoose.Schema({
     dateDelete:{
         type: Date
     },
+    postImage: {
+        type: String,
+        required: [true, 'postImage is required!'],
+        trim: true
+    },
+    images: {
+        type: Array,
+        default: []
+    },
+    assets:{
+        type: Array,
+        default: []
+    },
+     destaque: {
+        type: Boolean,
+        default: false
+    },
+    tipo:{
+        type: String,
+        emun: ['noticias', 'artigos', 'comunicados', 'projetos', 'sensibilizacao', 'relatorios', 'testemunhos', 'materias educativos'],
+        default: 'artigos'
+    }
 }, {timestamps: true});
 
 
